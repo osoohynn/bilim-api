@@ -1,13 +1,13 @@
-package com.dgsw.cobookapi;
+package com.dgsw.bilimapi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CobookApiApplication {
+public class BilimApiApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(CobookApiApplication.class, args);
+        SpringApplication.run(BilimApiApplication.class, args);
     }
 
 }

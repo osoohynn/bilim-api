@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.dgsw'
 version = '0.0.1-SNAPSHOT'
-description = 'cobook-api'
+description = 'bilim-api'
 
 java {
     toolchain {
