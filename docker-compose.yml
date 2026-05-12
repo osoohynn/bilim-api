@@ -1,0 +1,14 @@
+services:
+  mysql:
+    image: mysql:8.3
+    container_name: bilim-mysql
+    ports:
+      - "3305:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    volumes:
+      - bilim-mysql-data:/var/lib/mysql
+
+volumes:
+  bilim-mysql-data:
