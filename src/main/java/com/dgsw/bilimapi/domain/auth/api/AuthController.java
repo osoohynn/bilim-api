@@ -6,6 +6,8 @@ import com.dgsw.bilimapi.domain.auth.dto.TokenRefreshRequest;
 import com.dgsw.bilimapi.domain.auth.service.AuthService;
 import com.dgsw.bilimapi.domain.auth.dto.LoginRequest;
 import com.dgsw.bilimapi.domain.auth.dto.SignupRequest;
+import com.dgsw.bilimapi.domain.user.domain.UserEntity;
+import com.dgsw.bilimapi.domain.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserRepository userRepository;
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
@@ -38,5 +41,12 @@ public class AuthController {
     @PostMapping("/refresh")
     public AccessTokenResponse refresh(@RequestBody @Valid TokenRefreshRequest request) {
         return authService.refresh(request.refreshToken());
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(@AuthenticationPrincipal UserDetails userDetails) {
+        UserEntity user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        authService.logout(user.getId());
     }
 }

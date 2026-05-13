@@ -20,6 +20,11 @@ public class RefreshTokenService {
                 .orElseGet(() -> refreshTokenRepository.save(new RefreshToken(userId, refreshToken)));
     }
 
+    @Transactional
+    public void deleteByUserId(Long userId) {
+        refreshTokenRepository.deleteByUserId(userId);
+    }
+
     public RefreshToken findByRefreshToken(String refreshToken) {
         return refreshTokenRepository.findByRefreshToken(refreshToken)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid refresh token"));

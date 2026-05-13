@@ -63,6 +63,11 @@ public class AuthService {
         return new AuthResponse(accessToken, refreshToken);
     }
 
+    @Transactional
+    public void logout(Long userId) {
+        refreshTokenService.deleteByUserId(userId);
+    }
+
     public AccessTokenResponse refresh(String refreshToken) {
         if (!tokenProvider.validToken(refreshToken)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
