@@ -1,6 +1,7 @@
 package com.dgsw.bilimapi.domain.book.dto;
 
 import com.dgsw.bilimapi.domain.book.domain.Book;
+import com.dgsw.bilimapi.domain.book.domain.BookCategory;
 import java.time.LocalDateTime;
 
 public record BookResponse(
@@ -10,6 +11,8 @@ public record BookResponse(
         String isbn,
         String publisher,
         String description,
+        BookCategory category,
+        int price,
         LocalDateTime createdAt
 ) {
     public static BookResponse from(Book book) {
@@ -20,6 +23,8 @@ public record BookResponse(
                 book.getIsbn(),
                 book.getPublisher(),
                 book.getDescription(),
+                book.getCategory(),
+                book.getPrice(),
                 book.getCreatedAt()
         );
     }

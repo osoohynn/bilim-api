@@ -51,7 +51,7 @@ class BookControllerTest extends BaseControllerTest {
     @Test
     void create_success() throws Exception {
         String body = objectMapper.writeValueAsString(
-                new CreateBookRequest("클린 코드", "로버트 마틴", "9788966260959", "인사이트", "좋은 책"));
+                new CreateBookRequest("클린 코드", "로버트 마틴", "9788966260959", "인사이트", "좋은 책", null, 1000, null));
 
         mockMvc.perform(post("/api/books")
                         .header("Authorization", "Bearer " + adminToken)
@@ -68,7 +68,7 @@ class BookControllerTest extends BaseControllerTest {
         saveBook("클린 코드", "로버트 마틴", "9788966260959");
 
         String body = objectMapper.writeValueAsString(
-                new CreateBookRequest("다른 책", "다른 저자", "9788966260959", null, null));
+                new CreateBookRequest("다른 책", "다른 저자", "9788966260959", null, null, null, 0, null));
 
         mockMvc.perform(post("/api/books")
                         .header("Authorization", "Bearer " + adminToken)
@@ -81,7 +81,7 @@ class BookControllerTest extends BaseControllerTest {
     @Test
     void create_forbidden() throws Exception {
         String body = objectMapper.writeValueAsString(
-                new CreateBookRequest("클린 코드", "로버트 마틴", null, null, null));
+                new CreateBookRequest("클린 코드", "로버트 마틴", null, null, null, null, 0, null));
 
         mockMvc.perform(post("/api/books")
                         .header("Authorization", "Bearer " + userToken)
@@ -127,7 +127,7 @@ class BookControllerTest extends BaseControllerTest {
         Book book = saveBook("클린 코드", "로버트 마틴", "9788966260959");
 
         String body = objectMapper.writeValueAsString(
-                new UpdateBookRequest("클린 코드 2판", null, null, null, null));
+                new UpdateBookRequest("클린 코드 2판", null, null, null, null, null, null, null));
 
         mockMvc.perform(put("/api/books/" + book.getId())
                         .header("Authorization", "Bearer " + adminToken)
@@ -142,7 +142,7 @@ class BookControllerTest extends BaseControllerTest {
     @Test
     void update_notFound() throws Exception {
         String body = objectMapper.writeValueAsString(
-                new UpdateBookRequest("제목", null, null, null, null));
+                new UpdateBookRequest("제목", null, null, null, null, null, null, null));
 
         mockMvc.perform(put("/api/books/999")
                         .header("Authorization", "Bearer " + adminToken)
@@ -184,6 +184,7 @@ class BookControllerTest extends BaseControllerTest {
                 .title(title)
                 .author(author)
                 .isbn(isbn)
+                .price(1000)
                 .build());
     }
 
