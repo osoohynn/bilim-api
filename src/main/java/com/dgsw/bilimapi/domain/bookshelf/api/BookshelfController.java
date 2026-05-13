@@ -5,13 +5,9 @@ import com.dgsw.bilimapi.domain.book.service.BookService;
 import com.dgsw.bilimapi.domain.bookshelf.dto.BookshelfResponse;
 import com.dgsw.bilimapi.domain.bookshelf.dto.VisibilityRequest;
 import com.dgsw.bilimapi.domain.bookshelf.service.BookshelfService;
-import com.dgsw.bilimapi.domain.user.domain.UserEntity;
-import com.dgsw.bilimapi.domain.user.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -29,18 +25,16 @@ public class BookshelfController {
 
     private final BookshelfService bookshelfService;
     private final BookService bookService;
-    private final UserRepository userRepository;
 
     @GetMapping
-    public BookshelfResponse getMyBookshelf(@AuthenticationPrincipal UserDetails userDetails) {
-        return bookshelfService.getMyBookshelf(getCurrentUserId(userDetails));
+    public BookshelfResponse getMyBookshelf() {
+        return bookshelfService.getMyBookshelf();
     }
 
     @PatchMapping("/{userBookId}/visibility")
     public void setVisibility(@PathVariable Long userBookId,
-                              @RequestBody VisibilityRequest request,
-                              @AuthenticationPrincipal UserDetails userDetails) {
-        bookshelfService.setVisibility(getCurrentUserId(userDetails), userBookId, request.isPublic());
+                              @RequestBody VisibilityRequest request) {
+        bookshelfService.setVisibility(userBookId, request.isPublic());
     }
 
     @GetMapping("/{userId}")
@@ -50,20 +44,13 @@ public class BookshelfController {
 
     @PostMapping("/wishlist/{bookId}")
     @ResponseStatus(HttpStatus.CREATED)
-    public void addWishlist(@PathVariable Long bookId,
-                            @AuthenticationPrincipal UserDetails userDetails) {
-        bookService.addWishlist(getCurrentUserId(userDetails), bookId);
+    public void addWishlist(@PathVariable Long bookId) {
+        bookService.addWishlist(bookId);
     }
 
     @DeleteMapping("/wishlist/{bookId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeWishlist(@PathVariable Long bookId,
-                               @AuthenticationPrincipal UserDetails userDetails) {
-        bookService.removeWishlist(getCurrentUserId(userDetails), bookId);
-    }
-
-    private Long getCurrentUserId(UserDetails userDetails) {
-        UserEntity user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
-        return user.getId();
+    public void removeWishlist(@PathVariable Long bookId) {
+        bookService.removeWishlist(bookId);
     }
 }

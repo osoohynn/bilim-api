@@ -1,5 +1,6 @@
 package com.dgsw.bilimapi.domain.auth.service;
 
+import com.dgsw.bilimapi.commons.security.SecurityUtil;
 import com.dgsw.bilimapi.commons.security.jwt.JwtProperties;
 import com.dgsw.bilimapi.commons.security.jwt.JwtProvider;
 import com.dgsw.bilimapi.domain.auth.dto.AccessTokenResponse;
@@ -33,6 +34,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
+    private final SecurityUtil securityUtil;
 
     @Transactional
     public void signup(SignupRequest request) {
@@ -64,8 +66,8 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(Long userId) {
-        refreshTokenService.deleteByUserId(userId);
+    public void logout() {
+        refreshTokenService.deleteByUserId(securityUtil.getCurrentUserId());
     }
 
     public AccessTokenResponse refresh(String refreshToken) {

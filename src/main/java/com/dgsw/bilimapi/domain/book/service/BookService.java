@@ -1,5 +1,6 @@
 package com.dgsw.bilimapi.domain.book.service;
 
+import com.dgsw.bilimapi.commons.security.SecurityUtil;
 import com.dgsw.bilimapi.domain.book.domain.Book;
 import com.dgsw.bilimapi.domain.book.domain.BookCategory;
 import com.dgsw.bilimapi.domain.book.domain.BookWishlist;
@@ -29,6 +30,7 @@ public class BookService {
     private final UserBookRepository userBookRepository;
     private final BookWishlistRepository bookWishlistRepository;
     private final PointService pointService;
+    private final SecurityUtil securityUtil;
 
     @Transactional
     public BookResponse create(CreateBookRequest request) {
@@ -90,7 +92,8 @@ public class BookService {
     }
 
     @Transactional
-    public void purchase(Long userId, Long bookId) {
+    public void purchase(Long bookId) {
+        Long userId = securityUtil.getCurrentUserId();
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(BookNotFoundException::new);
 
@@ -109,7 +112,8 @@ public class BookService {
     }
 
     @Transactional(readOnly = true)
-    public String read(Long userId, Long bookId) {
+    public String read(Long bookId) {
+        Long userId = securityUtil.getCurrentUserId();
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(BookNotFoundException::new);
 
@@ -124,7 +128,8 @@ public class BookService {
     }
 
     @Transactional
-    public void addWishlist(Long userId, Long bookId) {
+    public void addWishlist(Long bookId) {
+        Long userId = securityUtil.getCurrentUserId();
         if (!bookRepository.existsById(bookId)) {
             throw new BookNotFoundException();
         }
@@ -138,7 +143,8 @@ public class BookService {
     }
 
     @Transactional
-    public void removeWishlist(Long userId, Long bookId) {
+    public void removeWishlist(Long bookId) {
+        Long userId = securityUtil.getCurrentUserId();
         BookWishlist wishlist = bookWishlistRepository.findByUserIdAndBookId(userId, bookId)
                 .orElseThrow(BookNotFoundException::new);
         bookWishlistRepository.delete(wishlist);

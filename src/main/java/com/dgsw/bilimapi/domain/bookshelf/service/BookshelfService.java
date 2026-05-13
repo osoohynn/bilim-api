@@ -1,5 +1,6 @@
 package com.dgsw.bilimapi.domain.bookshelf.service;
 
+import com.dgsw.bilimapi.commons.security.SecurityUtil;
 import com.dgsw.bilimapi.domain.book.domain.UserBook;
 import com.dgsw.bilimapi.domain.book.dto.BookResponse;
 import com.dgsw.bilimapi.domain.book.exception.NotBookOwnerException;
@@ -19,9 +20,11 @@ public class BookshelfService {
     private final UserBookRepository userBookRepository;
     private final BookWishlistRepository bookWishlistRepository;
     private final BookRepository bookRepository;
+    private final SecurityUtil securityUtil;
 
     @Transactional(readOnly = true)
-    public BookshelfResponse getMyBookshelf(Long userId) {
+    public BookshelfResponse getMyBookshelf() {
+        Long userId = securityUtil.getCurrentUserId();
         List<UserBook> myBooks = userBookRepository.findByOwnerId(userId);
 
         List<BookResponse> owned = myBooks.stream()
@@ -42,7 +45,8 @@ public class BookshelfService {
     }
 
     @Transactional
-    public void setVisibility(Long userId, Long userBookId, boolean isPublic) {
+    public void setVisibility(Long userBookId, boolean isPublic) {
+        Long userId = securityUtil.getCurrentUserId();
         UserBook userBook = userBookRepository.findByIdAndOwnerId(userBookId, userId)
                 .orElseThrow(NotBookOwnerException::new);
         userBook.setPublic(isPublic);

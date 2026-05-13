@@ -1,5 +1,6 @@
 package com.dgsw.bilimapi.domain.rental.service;
 
+import com.dgsw.bilimapi.commons.security.SecurityUtil;
 import com.dgsw.bilimapi.domain.book.domain.UserBook;
 import com.dgsw.bilimapi.domain.book.exception.BookNotFoundException;
 import com.dgsw.bilimapi.domain.book.repository.UserBookRepository;
@@ -33,9 +34,11 @@ public class RentalService {
     private final RentalExtensionRepository extensionRepository;
     private final UserBookRepository userBookRepository;
     private final FriendshipRepository friendshipRepository;
+    private final SecurityUtil securityUtil;
 
     @Transactional
-    public RentalResponse requestRental(Long borrowerId, Long userBookId) {
+    public RentalResponse requestRental(Long userBookId) {
+        Long borrowerId = securityUtil.getCurrentUserId();
         UserBook userBook = userBookRepository.findById(userBookId)
                 .orElseThrow(BookNotFoundException::new);
 
@@ -68,7 +71,8 @@ public class RentalService {
     }
 
     @Transactional
-    public void accept(Long userId, Long rentalId, AcceptRentalRequest request) {
+    public void accept(Long rentalId, AcceptRentalRequest request) {
+        Long userId = securityUtil.getCurrentUserId();
         BookRental rental = rentalRepository.findById(rentalId)
                 .orElseThrow(RentalNotFoundException::new);
 
@@ -84,7 +88,8 @@ public class RentalService {
     }
 
     @Transactional
-    public void reject(Long userId, Long rentalId) {
+    public void reject(Long rentalId) {
+        Long userId = securityUtil.getCurrentUserId();
         BookRental rental = rentalRepository.findById(rentalId)
                 .orElseThrow(RentalNotFoundException::new);
 
@@ -96,7 +101,8 @@ public class RentalService {
     }
 
     @Transactional
-    public RentalResponse lend(Long lenderId, LendRequest request) {
+    public RentalResponse lend(LendRequest request) {
+        Long lenderId = securityUtil.getCurrentUserId();
         UserBook userBook = userBookRepository.findById(request.userBookId())
                 .orElseThrow(BookNotFoundException::new);
 
@@ -127,7 +133,8 @@ public class RentalService {
     }
 
     @Transactional
-    public void returnBook(Long userId, Long rentalId) {
+    public void returnBook(Long rentalId) {
+        Long userId = securityUtil.getCurrentUserId();
         BookRental rental = rentalRepository.findById(rentalId)
                 .orElseThrow(RentalNotFoundException::new);
 
@@ -141,7 +148,8 @@ public class RentalService {
     }
 
     @Transactional
-    public void requestExtension(Long userId, Long rentalId, ExtendRequest request) {
+    public void requestExtension(Long rentalId, ExtendRequest request) {
+        Long userId = securityUtil.getCurrentUserId();
         BookRental rental = rentalRepository.findById(rentalId)
                 .orElseThrow(RentalNotFoundException::new);
 
@@ -157,7 +165,8 @@ public class RentalService {
     }
 
     @Transactional
-    public void acceptExtension(Long userId, Long rentalId) {
+    public void acceptExtension(Long rentalId) {
+        Long userId = securityUtil.getCurrentUserId();
         BookRental rental = rentalRepository.findById(rentalId)
                 .orElseThrow(RentalNotFoundException::new);
 
@@ -174,8 +183,8 @@ public class RentalService {
     }
 
     @Transactional(readOnly = true)
-    public List<RentalResponse> getMyRentals(Long userId) {
-        return rentalRepository.findActiveByUserId(userId).stream()
+    public List<RentalResponse> getMyRentals() {
+        return rentalRepository.findActiveByUserId(securityUtil.getCurrentUserId()).stream()
                 .map(RentalResponse::from)
                 .toList();
     }

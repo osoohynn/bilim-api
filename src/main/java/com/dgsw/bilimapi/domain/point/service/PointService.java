@@ -1,5 +1,6 @@
 package com.dgsw.bilimapi.domain.point.service;
 
+import com.dgsw.bilimapi.commons.security.SecurityUtil;
 import com.dgsw.bilimapi.domain.point.domain.UserPoint;
 import com.dgsw.bilimapi.domain.point.dto.PointResponse;
 import com.dgsw.bilimapi.domain.point.exception.InsufficientPointsException;
@@ -13,16 +14,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class PointService {
 
     private final UserPointRepository userPointRepository;
+    private final SecurityUtil securityUtil;
 
     @Transactional(readOnly = true)
-    public PointResponse getBalance(Long userId) {
-        UserPoint userPoint = getOrCreate(userId);
+    public PointResponse getBalance() {
+        UserPoint userPoint = getOrCreate(securityUtil.getCurrentUserId());
         return new PointResponse(userPoint.getBalance());
     }
 
     @Transactional
-    public PointResponse charge(Long userId, int amount) {
-        UserPoint userPoint = getOrCreate(userId);
+    public PointResponse charge(int amount) {
+        UserPoint userPoint = getOrCreate(securityUtil.getCurrentUserId());
         userPoint.charge(amount);
         return new PointResponse(userPoint.getBalance());
     }

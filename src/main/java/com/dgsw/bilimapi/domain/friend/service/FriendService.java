@@ -1,5 +1,6 @@
 package com.dgsw.bilimapi.domain.friend.service;
 
+import com.dgsw.bilimapi.commons.security.SecurityUtil;
 import com.dgsw.bilimapi.domain.friend.domain.Friendship;
 import com.dgsw.bilimapi.domain.friend.domain.FriendshipStatus;
 import com.dgsw.bilimapi.domain.friend.dto.FriendRequestResponse;
@@ -22,9 +23,11 @@ public class FriendService {
 
     private final FriendshipRepository friendshipRepository;
     private final UserRepository userRepository;
+    private final SecurityUtil securityUtil;
 
     @Transactional
-    public void sendRequest(Long requesterId, Long recipientId) {
+    public void sendRequest(Long recipientId) {
+        Long requesterId = securityUtil.getCurrentUserId();
         if (requesterId.equals(recipientId)) {
             throw new SelfFriendRequestException();
         }
@@ -47,7 +50,8 @@ public class FriendService {
     }
 
     @Transactional
-    public void accept(Long userId, Long requesterId) {
+    public void accept(Long requesterId) {
+        Long userId = securityUtil.getCurrentUserId();
         Friendship friendship = friendshipRepository
                 .findByRequesterIdAndRecipientId(requesterId, userId)
                 .filter(f -> f.getStatus() == FriendshipStatus.PENDING)
@@ -57,7 +61,8 @@ public class FriendService {
     }
 
     @Transactional
-    public void reject(Long userId, Long requesterId) {
+    public void reject(Long requesterId) {
+        Long userId = securityUtil.getCurrentUserId();
         Friendship friendship = friendshipRepository
                 .findByRequesterIdAndRecipientId(requesterId, userId)
                 .filter(f -> f.getStatus() == FriendshipStatus.PENDING)
@@ -67,7 +72,8 @@ public class FriendService {
     }
 
     @Transactional
-    public void removeFriend(Long userId, Long friendId) {
+    public void removeFriend(Long friendId) {
+        Long userId = securityUtil.getCurrentUserId();
         Friendship friendship = friendshipRepository
                 .findAcceptedFriendship(userId, friendId)
                 .orElseThrow(FriendshipNotFoundException::new);
@@ -76,7 +82,8 @@ public class FriendService {
     }
 
     @Transactional(readOnly = true)
-    public List<FriendResponse> getFriends(Long userId) {
+    public List<FriendResponse> getFriends() {
+        Long userId = securityUtil.getCurrentUserId();
         return friendshipRepository.findAcceptedFriendships(userId).stream()
                 .map(f -> {
                     Long friendId = f.getRequesterId().equals(userId) ? f.getRecipientId() : f.getRequesterId();
@@ -87,7 +94,8 @@ public class FriendService {
     }
 
     @Transactional(readOnly = true)
-    public List<FriendRequestResponse> getReceivedRequests(Long userId) {
+    public List<FriendRequestResponse> getReceivedRequests() {
+        Long userId = securityUtil.getCurrentUserId();
         return friendshipRepository.findByRecipientIdAndStatus(userId, FriendshipStatus.PENDING).stream()
                 .map(f -> {
                     UserEntity requester = userRepository.findById(f.getRequesterId()).orElseThrow();
