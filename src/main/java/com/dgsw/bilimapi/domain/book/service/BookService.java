@@ -1,12 +1,21 @@
 package com.dgsw.bilimapi.domain.book.service;
 
 import com.dgsw.bilimapi.domain.book.domain.Book;
+import com.dgsw.bilimapi.domain.book.domain.BookCategory;
+import com.dgsw.bilimapi.domain.book.domain.BookWishlist;
+import com.dgsw.bilimapi.domain.book.domain.UserBook;
 import com.dgsw.bilimapi.domain.book.dto.BookResponse;
 import com.dgsw.bilimapi.domain.book.dto.CreateBookRequest;
 import com.dgsw.bilimapi.domain.book.dto.UpdateBookRequest;
+import com.dgsw.bilimapi.domain.book.exception.AlreadyPurchasedException;
 import com.dgsw.bilimapi.domain.book.exception.BookNotFoundException;
 import com.dgsw.bilimapi.domain.book.exception.DuplicateIsbnException;
+import com.dgsw.bilimapi.domain.book.exception.NotBookOwnerException;
+import com.dgsw.bilimapi.domain.book.exception.WishlistAlreadyExistsException;
 import com.dgsw.bilimapi.domain.book.repository.BookRepository;
+import com.dgsw.bilimapi.domain.book.repository.BookWishlistRepository;
+import com.dgsw.bilimapi.domain.book.repository.UserBookRepository;
+import com.dgsw.bilimapi.domain.point.service.PointService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class BookService {
 
     private final BookRepository bookRepository;
+    private final UserBookRepository userBookRepository;
+    private final BookWishlistRepository bookWishlistRepository;
+    private final PointService pointService;
 
     @Transactional
     public BookResponse create(CreateBookRequest request) {
@@ -31,14 +43,17 @@ public class BookService {
                 .isbn(request.isbn())
                 .publisher(request.publisher())
                 .description(request.description())
+                .category(request.category())
+                .price(request.price() != null ? request.price() : 0)
+                .contentUrl(request.contentUrl())
                 .build());
 
         return BookResponse.from(book);
     }
 
     @Transactional(readOnly = true)
-    public List<BookResponse> findAll() {
-        return bookRepository.findAll().stream()
+    public List<BookResponse> search(String keyword, BookCategory category) {
+        return bookRepository.search(keyword, category).stream()
                 .map(BookResponse::from)
                 .toList();
     }
@@ -61,7 +76,8 @@ public class BookService {
         }
 
         book.update(request.title(), request.author(), request.isbn(),
-                request.publisher(), request.description());
+                request.publisher(), request.description(),
+                request.category(), request.price(), request.contentUrl());
 
         return BookResponse.from(book);
     }
@@ -71,5 +87,60 @@ public class BookService {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(BookNotFoundException::new);
         bookRepository.delete(book);
+    }
+
+    @Transactional
+    public void purchase(Long userId, Long bookId) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(BookNotFoundException::new);
+
+        if (userBookRepository.existsByOwnerIdAndBookId(userId, bookId)) {
+            throw new AlreadyPurchasedException();
+        }
+
+        pointService.deduct(userId, book.getPrice());
+
+        userBookRepository.save(UserBook.builder()
+                .bookId(bookId)
+                .ownerId(userId)
+                .holderId(userId)
+                .isPublic(false)
+                .build());
+    }
+
+    @Transactional(readOnly = true)
+    public String read(Long userId, Long bookId) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(BookNotFoundException::new);
+
+        boolean hasAccess = userBookRepository.findByHolderId(userId).stream()
+                .anyMatch(ub -> ub.getBookId().equals(bookId));
+
+        if (!hasAccess) {
+            throw new NotBookOwnerException();
+        }
+
+        return book.getContentUrl();
+    }
+
+    @Transactional
+    public void addWishlist(Long userId, Long bookId) {
+        if (!bookRepository.existsById(bookId)) {
+            throw new BookNotFoundException();
+        }
+        if (bookWishlistRepository.existsByUserIdAndBookId(userId, bookId)) {
+            throw new WishlistAlreadyExistsException();
+        }
+        bookWishlistRepository.save(BookWishlist.builder()
+                .userId(userId)
+                .bookId(bookId)
+                .build());
+    }
+
+    @Transactional
+    public void removeWishlist(Long userId, Long bookId) {
+        BookWishlist wishlist = bookWishlistRepository.findByUserIdAndBookId(userId, bookId)
+                .orElseThrow(BookNotFoundException::new);
+        bookWishlistRepository.delete(wishlist);
     }
 }
