@@ -11,6 +11,7 @@ import com.dgsw.bilimapi.domain.auth.dto.LoginRequest;
 import com.dgsw.bilimapi.domain.auth.dto.SignupRequest;
 import com.dgsw.bilimapi.domain.user.repository.UserRepository;
 import com.dgsw.bilimapi.commons.security.CustomUserDetailsService;
+import com.dgsw.bilimapi.domain.point.service.PointService;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class AuthService {
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtil securityUtil;
+    private final PointService pointService;
 
     @Transactional
     public void signup(SignupRequest request) {
@@ -49,6 +51,7 @@ public class AuthService {
                 .lastSeenAt(LocalDateTime.now())
                 .build();
         userRepository.save(user);
+        pointService.initBalance(user.getId());
     }
 
     public AuthResponse login(LoginRequest request) {

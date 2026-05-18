@@ -30,6 +30,12 @@ public class PointService {
     }
 
     @Transactional
+    public void initBalance(Long userId) {
+        UserPoint up = userPointRepository.save(new UserPoint(userId));
+        up.charge(50000);
+    }
+
+    @Transactional
     public void deduct(Long userId, int amount) {
         UserPoint userPoint = getOrCreate(userId);
         if (userPoint.getBalance() < amount) {
